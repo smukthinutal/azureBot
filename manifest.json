@@ -1,0 +1,65 @@
+{
+    "$schema": "https://statics.teams.microsoft.com/sdk/v1.2/manifest/MicrosoftTeams.schema.json",
+    "manifestVersion": "1.2",
+    "version": "1.0.0",
+    "id": "ce493283-f66b-4c19-a8f4-fd09d66f9e5b",
+    "packageName": "com.sravan.trackerTest",
+    "developer": {
+        "name": "Sravan",
+        "websiteUrl": "https://winter-field-6628.factset.io/",
+        "privacyUrl": "https://winter-field-6628.factset.io/privacy",
+        "termsOfUseUrl": "https://winter-field-6628.factset.io/terms"
+    },
+    "icons": {
+        "color": "color.png",
+        "outline": "outline.png"
+    },
+    "name": {
+        "short": "trackerTest",
+        "full": "tracker find curator"
+    },
+    "description": {
+        "short": "GET curator name",
+        "full": "GET curator name"
+    },
+    "accentColor": "#FFFFFF",
+    "bots": [
+        {
+            "botId": "ce493283-f66b-4c19-a8f4-fd09d66f9e5b",
+            "scopes": [
+                "personal",
+                "team"
+            ],
+            "commandLists": [
+                {
+                    "scopes": [
+                        "personal"
+                    ],
+                    "commands": [
+                        {
+                            "title": "who is * curator?",
+                            "description": "who is perforce curator"
+                        }
+                    ]
+                },
+                {
+                    "scopes": [
+                        "team"
+                    ],
+                    "commands": [
+                        {
+                            "title": "who is * curator?",
+                            "description": "who is perforce curator"
+                        }
+                    ]
+                }
+            ]
+        }
+    ],
+    "permissions": [
+        "identity",
+        "messageTeamMembers"
+    ],
+    "validDomains": [
+    ]
+}
