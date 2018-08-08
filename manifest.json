@@ -6,9 +6,9 @@
     "packageName": "com.sravan.trackerTest",
     "developer": {
         "name": "Sravan",
-        "websiteUrl": "https://winter-field-6628.factset.io/",
-        "privacyUrl": "https://winter-field-6628.factset.io/privacy",
-        "termsOfUseUrl": "https://winter-field-6628.factset.io/terms"
+        "websiteUrl": "https://test-teams-bot.herokuapp.com",
+        "privacyUrl": "https://test-teams-bot.herokuapp.com//privacy",
+        "termsOfUseUrl": "https://test-teams-bot.herokuapp.com/terms"
     },
     "icons": {
         "color": "color.png",
