@@ -1,8 +1,8 @@
 var restify          = require("restify");
 var botBuilder       = require("botbuilder");
 var teams            = require("botbuilder-teams");
-//var request          = require("request");
-//var jwtDecode       = require("jwt-decode");
+var request          = require("request");
+var jwtDecode       = require("jwt-decode");
 
 
 var server = restify.createServer();
