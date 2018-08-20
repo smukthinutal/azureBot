@@ -52,12 +52,13 @@ server.get("/login",function(req, res, next){
     var loginURL = "https://login.microsoftonline.com/" + tenantId + "/oauth2/authorize?client_id=" + process.env.APP_CLIENT_ID +
                    "&response_type=code&redirect_uri=" + encodeURIComponent( "https://" + req.headers.host + "/verified") +
                    "&response_mode=query&resource=" + encodeURIComponent("https://graph.microsoft.com")+ "&state=" + csrfRandomNumber;
-   console.log(loginURL);
+   console.log(csrfRandomNumber);
    res.redirect(loginURL, next);
 });
 
 server.use(restify.plugins.queryParser());
 server.get("/verified", function(req, res){
+   console.log( req.query.state + " ----- "+ csrfRandomNumber);
    if(req.query.state !== csrfRandomNumber) res.send(401, "CSRF error");
    else {
        var authURLOptions = {
