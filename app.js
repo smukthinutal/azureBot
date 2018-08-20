@@ -36,7 +36,7 @@ bot.dialog('/', function(session){
     tenantId = teams.TeamsMessage.getTenantId(session.message);
     if(session.userData.accessKey) {
         session.send("Hi %s, you are already logged in", session.message.user.name);
-        tempSession = session;
+        tempSession = new botBuilder.Session(session);
     }
     else if( userKey[session.message.user.name]) {
         session.userData.accessKey = userKey[session.message.user.name];
