@@ -2,7 +2,7 @@ var restify          = require("restify");
 var botBuilder       = require("botbuilder");
 var teams            = require("botbuilder-teams");
 var request          = require("request");
-var jwtDecode        = require("jwt-decode");
+var jwtDecoder       = require("jwt-decode");
 var rn               = require('random-number');
 
 
