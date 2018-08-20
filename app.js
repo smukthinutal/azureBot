@@ -59,7 +59,7 @@ server.get("/login",function(req, res, next){
 server.use(restify.plugins.queryParser());
 server.get("/verified", function(req, res){
    console.log( req.query.state + " ----- "+ csrfRandomNumber);
-   if(req.query.state !== csrfRandomNumber) res.send(401, "CSRF error");
+   if(parseInt(req.query.state) !== csrfRandomNumber) res.send(401, "CSRF error");
    else {
        var authURLOptions = {
            host: "https://login.microsoftonline.com/",
