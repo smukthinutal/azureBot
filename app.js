@@ -24,13 +24,13 @@ var bot = new botBuilder.UniversalBot(connector).set('storage', inMemoryStorage)
 bot.dialog('/', function(session){
     console.log(teams.TeamsMessage.getTenantId(session.message));
     var tenant = teams.TeamsMessage.getTenantId(session.message);
-    request.get("https://login.microsoftonline.com/" + tenant + "/oauth2/authorize?client_id=" + process.env.APP_CLIENT_ID +
-                "&response_type=code&redirect_uri=" + encodeURI("https://test-teams-bot.herokuapp.com/verified") +
-                "&response_mode=query&resource=" + encodeURI("https://factset.onmicrosoft.com/9fac8285-6f7b-4cab-b385-6ed8aec01fde" )+ "&state=verified", function(error, response, body){
-                    session.send(body);
-                    console.log(body);
-                });
-   session.send("Your bot is running. You said: %s", session.message.text);
+    //request.get("https://login.microsoftonline.com/" + tenant + "/oauth2/authorize?client_id=" + process.env.APP_CLIENT_ID +
+    //            "&response_type=code&redirect_uri=" + encodeURI("https://test-teams-bot.herokuapp.com/verified") +
+    //            "&response_mode=query&resource=" + encodeURI("https://factset.onmicrosoft.com/9fac8285-6f7b-4cab-b385-6ed8aec01fde" )+ "&state=verified", function(error, response, body){
+    //                session.send(body);
+    //                console.log(body);
+    //            });
+   session.send("Hi %s, Your bot is running. You said: %s", session.message.user.name, session.message.text);
 });
 
 server.get("/verified", function(req, response){
