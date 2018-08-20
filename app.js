@@ -26,8 +26,6 @@ var userKey = {};
 
 var bot = new botBuilder.UniversalBot(connector).set('storage', inMemoryStorage);
 
-var tempSession;
-
 var csrfRandomOptions = { min: 0, max: 100000, integer: true};
 var generateRandom = rn.generator(csrfRandomOptions);
 var csrfRandomNumber;
@@ -36,7 +34,6 @@ bot.dialog('/', function(session){
     tenantId = teams.TeamsMessage.getTenantId(session.message);
     if(session.userData.accessKey) {
         session.send("Hi %s, you are already logged in", session.message.user.name);
-        tempSession = new botBuilder.Session(session);
     }
     else if( userKey[session.message.user.name]) {
         session.userData.accessKey = userKey[session.message.user.name];
@@ -116,7 +113,6 @@ server.get("/verified", function(req, res){
                }
            });
            userKey[decoded.name] = "authenticated";
-           tempSession.beginDialog("/");
            res.send(200, "Successfully authenticated");
        });
    }
