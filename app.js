@@ -2,7 +2,8 @@ var restify          = require("restify");
 var botBuilder       = require("botbuilder");
 var teams            = require("botbuilder-teams");
 var request          = require("request");
-var jwtDecode       = require("jwt-decode");
+var jwtDecode        = require("jwt-decode");
+var rn               = require('random-number');
 
 
 var server = restify.createServer();
@@ -15,49 +16,109 @@ var connector = new botBuilder.ChatConnector({
     appPassword: process.env.MICROSOFT_APP_PASSWORD// || botConfig.microsoftAppPassword
 });
 
+var tenantId;
+
 server.post('/api/messages',connector.listen());
 
 var inMemoryStorage = new botBuilder.MemoryBotStorage();
 
+var userKey = {};
+
 var bot = new botBuilder.UniversalBot(connector).set('storage', inMemoryStorage);
 
+var tempSession;
+
+var csrfRandomOptions = { min: 0, max: 100000, integer: true};
+var generateRandom = rn.generator(csrfRandomOptions);
+var csrfRandomNumber;
+
 bot.dialog('/', function(session){
-    console.log(teams.TeamsMessage.getTenantId(session.message));
-    var tenant = teams.TeamsMessage.getTenantId(session.message);
-    //request.get("https://login.microsoftonline.com/" + tenant + "/oauth2/authorize?client_id=" + process.env.APP_CLIENT_ID +
-    //            "&response_type=code&redirect_uri=" + encodeURI("https://test-teams-bot.herokuapp.com/verified") +
-    //            "&response_mode=query&resource=" + encodeURI("https://factset.onmicrosoft.com/9fac8285-6f7b-4cab-b385-6ed8aec01fde" )+ "&state=verified", function(error, response, body){
-    //                session.send(body);
-    //                console.log(body);
-    //            });
-   session.send("Hi %s, Your bot is running. You said: %s", session.message.user.name, session.message.text);
+    tenantId = teams.TeamsMessage.getTenantId(session.message);
+    if(session.userData.accessKey) {
+        session.send("Hi %s, you are already logged in", session.message.user.name);
+        tempSession = session;
+    }
+    else if( userKey[session.message.user.name]) {
+        session.userData.accessKey = userKey[session.message.user.name];
+        session.send("You have been successfully authenticated");
+    }
+    else {
+        session.send("You have to [login](https://test-teams-bot.herokuapp.com/login) before using this bot");
+    }
 });
 
-server.get("/verified", function(req, response){
-    if(req.params.error) console.log("Access Denied" + req.params.error);
-    if(req.params.state !== "verified") {console.log("CSRF error");}
-    else {
-        var code = req.params.code;
-        var options = {
-            host: "https://login.microsoftonline.com/",
-            path: tenant + "/oauth2/token",
-            headers: {
-                "Content-type":  "application/x-www-form-urlencoded",
-                "grant_type"  :  "authorization_code",
-                "client_id"   :  process.env.APP_CLIENT_ID,
-                "code"        :  code,
-                "redirect_uri":  encodeURI("https://test-teams-bot.herokuapp.com/verified"),
-                "resource"    :  encodeURI("https://factset.onmicrosoft.com/9fac8285-6f7b-4cab-b385-6ed8aec01fde"),
-            },
-        }
-        request.post(options, function(error, response, body){
-            console.log(body);
-            var responseToken = JSON.parse(body);
-            var decoded = jwt_decode(responseToken["id_token"]);
-            console.log(decoded["unique_name"]);
-            bot.send("Your bot is running. Your name is %s", decoded["unique_name"]);
-        })
-    }
+server.get("/login",function(req, res, next){
+    csrfRandomNumber = generateRandom();
+    var loginURL = "https://login.microsoftonline.com/" + tenantId + "/oauth2/authorize?client_id=" + process.env.APP_CLIENT_ID +
+                   "&response_type=code&redirect_uri=" + encodeURIComponent( "https://" + req.headers.host + "/verified") +
+                   "&response_mode=query&resource=" + encodeURIComponent("https://graph.microsoft.com")+ "&state=" + csrfRandomNumber;
+   console.log(loginURL);
+   res.redirect(loginURL, next);
+});
+
+server.use(restify.plugins.queryParser());
+server.get("/verified", function(req, res){
+   if(req.query.state !== csrfRandomNumber || !req.query.code) res.send(401, "CSRF error");
+   else {
+       var authURLOptions = {
+           host: "https://login.microsoftonline.com/",
+           path: tenantId + "/oauth2/token",
+           headers: {
+               "Content-type":  "application/x-www-form-urlencoded",
+           },
+           body: "grant_type=authorization_code&client_id=" + process.env.APP_CLIENT_ID + "&code="+ req.query.code + "&redirect_uri=" + 
+               encodeURIComponent("https://" + req.headers.host + "/verified") + "&resource=" + encodeURIComponent("https://graph.microsoft.com") +
+               "&client_secret=" + encodeURIComponent(process.env.APP_KEY)
+       }
+       request.post("https://login.microsoftonline.com/" + tenantId + "/oauth2/token", authURLOptions, function(error, response, body){
+           console.log(error);
+           console.log(body);
+           var json = JSON.parse(body);
+           var decoded = jwtDecoder(json["id_token"]);
+           console.log(decoded);
+           var getOptions = {
+               headers: {
+                   "Content-Type"  : "application/json",
+                   "Authorization" : json["access_token"]
+               }
+           }
+           var details = request.get("https://graph.microsoft.com/v1.0/me", getOptions, function(getError, getResponse, getBody){
+               if(getResponse.statusCode !== 200) {
+                   console.log("Refreshing token for user: " + decoded["unique_name"] );
+                   var refreshOptions = {
+                       host: "https://login.microsoftonline.com",
+                       headers: {
+                           "Content-type":  "application/x-www-form-urlencoded",
+                       },
+                       body:   "grant_type=refresh_token&client_id=" + process.env.APP_CLIENT_ID +
+                               "&refresh_token=" + json["refresh_token"] +
+                               "&resource=" + encodeURIComponent("https://graph.microsoft.com") +
+                               "&client_secret=" + encodeURIComponent(process.env.APP_KEY)
+                   }
+                   request.post("https://login.microsoftonline.com/" + tenantId + "/oauth2/token", refreshOptions, function(refreshError, refreshResponse, refreshBody){
+                       console.log(refreshError);
+                      // console.log(refreshBody);
+                       var refreshJson = JSON.parse(refreshBody);
+                       getOptions.headers.Authorization = refreshJson.access_token;
+                       if(refreshJson.error) console.log(refreshJson.error);
+                       else {
+                           request.get("https://graph.microsoft.com/v1.0/me", getOptions, function(refreshGetError, refreshGetResponse, refreshGetBody){
+                              // console.log(refreshGetBody);
+                               console.log(refreshGetError);
+                           });
+                       }
+                   });
+               }
+               else {
+                   console.log(getError);
+                   //console.log(getBody);
+               }
+           });
+           userKey[decoded.name] = "authenticated";
+           tempSession.beginDialog("/");
+           res.send(200, "Successfully authenticated");
+       });
+   }
 });
 
 server.get("/", function(req, response){ response.send(200,"Your app is up and running.")})
