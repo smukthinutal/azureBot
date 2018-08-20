@@ -25,6 +25,7 @@ var inMemoryStorage = new botBuilder.MemoryBotStorage();
 var userKey = {};
 
 var bot = new botBuilder.UniversalBot(connector).set('storage', inMemoryStorage);
+var tempAddress;
 
 var csrfRandomOptions = { min: 0, max: 100000, integer: true};
 var generateRandom = rn.generator(csrfRandomOptions);
@@ -37,10 +38,11 @@ bot.dialog('/', function(session){
     }
     else if( userKey[session.message.user.name]) {
         session.userData.accessKey = userKey[session.message.user.name];
-        session.send("You have been successfully authenticated");
+        //session.send("You have been successfully authenticated");
     }
     else {
         session.send("You have to [login](https://test-teams-bot.herokuapp.com/login) before using this bot");
+        tempAddress = session.message.address;
     }
 });
 
@@ -113,6 +115,9 @@ server.get("/verified", function(req, res){
                }
            });
            userKey[decoded.name] = "authenticated";
+           var msg = new botBuilder.Message().address(tempAddress);
+           msg.text("You have been successfully authenticated");
+           bot.send(msg);
            res.send(200, "Successfully authenticated");
        });
    }
