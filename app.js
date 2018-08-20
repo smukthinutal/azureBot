@@ -38,7 +38,7 @@ bot.dialog('/', function(session){
     }
     else if( userKey[session.message.user.name]) {
         session.userData.accessKey = userKey[session.message.user.name];
-        //session.send("You have been successfully authenticated");
+        session.send("Hi %s, you are already logged in", session.message.user.name);
     }
     else {
         session.send("You have to [login](https://test-teams-bot.herokuapp.com/login) before using this bot");
@@ -51,13 +51,11 @@ server.get("/login",function(req, res, next){
     var loginURL = "https://login.microsoftonline.com/" + tenantId + "/oauth2/authorize?client_id=" + process.env.APP_CLIENT_ID +
                    "&response_type=code&redirect_uri=" + encodeURIComponent( "https://" + req.headers.host + "/verified") +
                    "&response_mode=query&resource=" + encodeURIComponent("https://graph.microsoft.com")+ "&state=" + csrfRandomNumber;
-   console.log(csrfRandomNumber);
    res.redirect(loginURL, next);
 });
 
 server.use(restify.plugins.queryParser());
 server.get("/verified", function(req, res){
-   console.log( req.query.state + " ----- "+ csrfRandomNumber);
    if(parseInt(req.query.state) !== csrfRandomNumber) res.send(401, "CSRF error");
    else {
        var authURLOptions = {
@@ -72,10 +70,8 @@ server.get("/verified", function(req, res){
        }
        request.post("https://login.microsoftonline.com/" + tenantId + "/oauth2/token", authURLOptions, function(error, response, body){
            console.log(error);
-           console.log(body);
            var json = JSON.parse(body);
            var decoded = jwtDecoder(json["id_token"]);
-           console.log(decoded);
            var getOptions = {
                headers: {
                    "Content-Type"  : "application/json",
@@ -111,7 +107,6 @@ server.get("/verified", function(req, res){
                }
                else {
                    console.log(getError);
-                   //console.log(getBody);
                }
            });
            userKey[decoded.name] = "authenticated";
