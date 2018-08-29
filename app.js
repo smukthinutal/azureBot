@@ -33,6 +33,8 @@ var csrfRandomNumber;
 
 bot.dialog('/', function(session){
     tenantId = teams.TeamsMessage.getTenantId(session.message);
+    console.log(session.message.address.conversation.id);
+    console.log(session.message.address.channelId);
     if(session.userData.accessKey) {
         session.send("Hi %s, you are already logged in", session.message.user.name);
     }
