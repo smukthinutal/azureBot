@@ -129,10 +129,10 @@ server.get("/verified", function(req, res){
                         "Authorization" : "Bearer " + accessKeyJson["access_token"],
                         "Content-Type"  : "application/json"
                     },
-                    body : {
+                    json : {
                         "type": "message",
                         "from": {
-                            "id": "ce493283-f66b-4c19-a8f4-fd09d66f9e5b",
+                            "id": process.env.MICROSOFT_APP_ID,
                             "name": "Trackerbot"
                         },
                         "text": "You have been authenticated ( web)"
