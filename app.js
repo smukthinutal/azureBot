@@ -26,7 +26,6 @@ var userKey = {};
 
 var bot = new botBuilder.UniversalBot(connector).set('storage', inMemoryStorage);
 var tempAddress;
-var tempAddressString;
 
 var csrfRandomOptions = { min: 0, max: 100000, integer: true};
 var generateRandom = rn.generator(csrfRandomOptions);
@@ -34,10 +33,8 @@ var csrfRandomNumber;
 
 bot.dialog('/', function(session){
     tenantId = teams.TeamsMessage.getTenantId(session.message);
-    tempAddress = session.message.address;
-    console.log(typeof tempAddress);
-    tempAddressString = tempAddress.toString();
-    console.log(tempAddress.toString());
+    //tempAddress = session.message.address;
+    tempAddress = session.message.address.conversation.id;
     if(session.userData.accessKey) {
         session.send("Hi %s, you are already logged in", session.message.user.name);
     }
@@ -114,10 +111,38 @@ server.get("/verified", function(req, res){
                }
            });
            userKey[decoded.name] = "authenticated";
-           var msg = new botBuilder.Message().address(tempAddress);
-           console.log(JSON.parse(tempAddressString));
-           msg.text("You have been successfully authenticated");
-           bot.send(msg);
+           //var msg = new botBuilder.Message().address(tempAddress);
+           //msg.text("You have been successfully authenticated");
+           //bot.send(msg);
+           var botApiKeyOptions = {
+               headers: {
+                            "Content-type":  "application/x-www-form-urlencoded",
+               },
+               body: "grant_type=client_credentials&client_id=" + encodeURIComponent(process.env.MICROSOFT_APP_ID) +
+                     "&client_secret=" + encodeURIComponent(process.env.MICROSOFT_APP_PASSWORD) + "&scope=https%3A%2F%2Fapi.botframework.com%2F.default"
+           }
+           request.get("https://login.microsoftonline.com/botframework.com/oauth2/v2.0/token", botApiKeyOptions, function(error, response, body){
+                if(error) console.log("Error while accessing Api Token for bot" + error);
+                var accessKeyJson = JSON.parse(body);
+                var botPostHeaders = {
+                    headers: {
+                        "Authorization" : "Bearer " + accessKeyJson["access_token"],
+                        "Content-Type"  : "application/json"
+                    },
+                    body : {
+                        "type": "message",
+                        "from": {
+                            "id": "ce493283-f66b-4c19-a8f4-fd09d66f9e5b",
+                            "name": "Trackerbot"
+                        },
+                        "text": "You have been authenticated ( web)"
+                        }
+                }
+                request.post("https://smba.trafficmanager.net/amer/v3/conversations/" + encodeURIComponent(tempAddress) + "/activities", botPostHeaders, function(error, response, body){
+                    if(error) console.log(error);
+                    console.log(body);
+                });
+           })
            res.send(200, "Successfully authenticated");
        });
    }
