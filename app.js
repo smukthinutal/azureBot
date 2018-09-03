@@ -34,10 +34,10 @@ var csrfRandomNumber;
 
 bot.dialog('/', function(session){
     tenantId = teams.TeamsMessage.getTenantId(session.message);
-    console.log(session.message.address.conversation.id);
+    tempAddress = session.message.address;
     console.log(typeof tempAddress);
-    tempAddressString = tempAddress.stringify();
-    console.log(tempAddress.stringify());
+    tempAddressString = tempAddress.toString();
+    console.log(tempAddress.toString());
     if(session.userData.accessKey) {
         session.send("Hi %s, you are already logged in", session.message.user.name);
     }
@@ -47,7 +47,6 @@ bot.dialog('/', function(session){
     }
     else {
         session.send("You have to [login](https://test-teams-bot.herokuapp.com/login) before using this bot");
-        tempAddress = session.message.address;
     }
 });
 
