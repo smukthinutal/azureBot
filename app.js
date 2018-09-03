@@ -26,6 +26,7 @@ var userKey = {};
 
 var bot = new botBuilder.UniversalBot(connector).set('storage', inMemoryStorage);
 var tempAddress;
+var tempAddressString;
 
 var csrfRandomOptions = { min: 0, max: 100000, integer: true};
 var generateRandom = rn.generator(csrfRandomOptions);
@@ -34,7 +35,9 @@ var csrfRandomNumber;
 bot.dialog('/', function(session){
     tenantId = teams.TeamsMessage.getTenantId(session.message);
     console.log(session.message.address.conversation.id);
-    console.log(session.message.address.channelId);
+    console.log(typeof tempAddress);
+    tempAddressString = tempAddress.stringify();
+    console.log(tempAddress.stringify());
     if(session.userData.accessKey) {
         session.send("Hi %s, you are already logged in", session.message.user.name);
     }
@@ -113,6 +116,7 @@ server.get("/verified", function(req, res){
            });
            userKey[decoded.name] = "authenticated";
            var msg = new botBuilder.Message().address(tempAddress);
+           console.log(JSON.parse(tempAddressString));
            msg.text("You have been successfully authenticated");
            bot.send(msg);
            res.send(200, "Successfully authenticated");
