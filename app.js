@@ -18,13 +18,15 @@ var connector = new botBuilder.ChatConnector({
 
 var tenantId;
 
-server.post('/api/messages',connector.listen());
 
 var inMemoryStorage = new botBuilder.MemoryBotStorage();
 
+var bot = new botBuilder.UniversalBot(connector).set('storage', inMemoryStorage);
+
+server.post('/api/messages',connector.listen());
+
 var userKey = {};
 
-var bot = new botBuilder.UniversalBot(connector).set('storage', inMemoryStorage);
 var tempAddress;
 
 var csrfRandomOptions = { min: 0, max: 100000, integer: true};
@@ -32,6 +34,25 @@ var generateRandom = rn.generator(csrfRandomOptions);
 var csrfRandomNumber;
 
 bot.dialog('/', function(session){
+    connector.getUserToken(session.message.address, process.env.CONNECTION, undefined, function(err, result) {
+        if(result) {
+            session.send("You are already signed in (SDK)");
+        }
+        else {
+            console.log(err);
+            if(!session.userData.accessKey) {
+                botBuilder.OAuthCard.create(connector, session, process.env.CONNECTION, "Please sign in", function(createSignErr, signInMessage) {
+                    if(signInMessage) {
+                        session.send(signInMessage);
+                        session.userData.accessKey = 1;
+                    }
+                    else {
+                        session.send("Issue with your signin: %s", createSignErr);
+                    }
+                })
+            }
+        }
+    });
     tenantId = teams.TeamsMessage.getTenantId(session.message);
     //tempAddress = session.message.address;
     tempAddress = session.message.address.conversation.id;
@@ -56,7 +77,7 @@ server.get("/login",function(req, res, next){
 });
 
 server.use(restify.plugins.queryParser());
-server.get("/verified", function(req, res){
+server.get("/verified", function(req, res, next){
    if(parseInt(req.query.state) !== csrfRandomNumber) res.send(401, "CSRF error");
    else {
        var authURLOptions = {
@@ -111,9 +132,6 @@ server.get("/verified", function(req, res){
                }
            });
            userKey[decoded.name] = "authenticated";
-           //var msg = new botBuilder.Message().address(tempAddress);
-           //msg.text("You have been successfully authenticated");
-           //bot.send(msg);
            var botApiKeyOptions = {
                headers: {
                             "Content-type":  "application/x-www-form-urlencoded",
@@ -144,6 +162,7 @@ server.get("/verified", function(req, res){
                 });
            })
            res.send(200, "Successfully authenticated");
+           next();
        });
    }
 });
