@@ -34,25 +34,26 @@ var generateRandom = rn.generator(csrfRandomOptions);
 var csrfRandomNumber;
 
 bot.dialog('/', function(session){
-    connector.getUserToken(session.message.address, process.env.CONNECTION, undefined, function(err, result) {
-        if(result) {
-            session.send("You are already signed in (SDK)");
-        }
-        else {
-            console.log(err);
-            if(!session.userData.accessKey) {
-                botBuilder.OAuthCard.create(connector, session, process.env.CONNECTION, "Please sign in", function(createSignErr, signInMessage) {
-                    if(signInMessage) {
-                        session.send(signInMessage);
-                        session.userData.accessKey = 1;
-                    }
-                    else {
-                        session.send("Issue with your signin: %s", createSignErr);
-                    }
-                })
-            }
-        }
-    });
+    //Commenting this part .. need to test this 
+    //connector.getUserToken(session.message.address, process.env.CONNECTION, undefined, function(err, result) {
+    //    if(result) {
+    //        session.send("You are already signed in (SDK)");
+    //    }
+    //    else {
+    //        console.log(err);
+    //        if(!session.userData.accessKey) {
+    //            botBuilder.OAuthCard.create(connector, session, process.env.CONNECTION, "Please sign in", function(createSignErr, signInMessage) {
+    //                if(signInMessage) {
+    //                    session.send(signInMessage);
+    //                    session.userData.accessKey = 1;
+    //                }
+    //                else {
+    //                    session.send("Issue with your signin: %s", createSignErr);
+    //                }
+    //            })
+    //        }
+    //    }
+    //});
     tenantId = teams.TeamsMessage.getTenantId(session.message);
     //tempAddress = session.message.address;
     tempAddress = session.message.address.conversation.id;
