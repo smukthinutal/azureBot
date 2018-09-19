@@ -23,7 +23,10 @@ var inMemoryStorage = new botBuilder.MemoryBotStorage();
 
 var bot = new botBuilder.UniversalBot(connector).set('storage', inMemoryStorage);
 
-server.post('/api/messages',connector.listen());
+server.post('/api/messages',function(req, res, next){
+    console.log(req.body);
+    connector.listen();
+});
 
 var userKey = {};
 
