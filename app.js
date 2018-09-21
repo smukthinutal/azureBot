@@ -29,7 +29,8 @@ server.post('/api/messages',function(req, res, next){
     //console.log(req.headers);
     if(req.headers.authorization.includes("Bearer "))
         res.send(403,"Forbidden");
-    var activityJson = JSON.parse(req.body);
+    console.log(typeof req.body);
+    var activityJson = req.body;
     var bearerToken = req.headers.authorization.replace("Bearer ","");
     var arr = bearerToken.split('.');
     arr.pop();
@@ -71,7 +72,6 @@ server.post('/api/messages',function(req, res, next){
             }
         })
     }
-    console.log(req.body);
     //connector.listen();
 });
 
