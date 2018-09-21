@@ -47,6 +47,9 @@ server.post('/api/messages',function(req, res, next){
             if(jwtPayload.iss !== getJson.issuer || jwtHeader.alg !== getJson.id_token_signing_alg_values_supported || jwtPayload.exp < (new Date).getTime() || 
                 jwtPayload.serviceurl !== activityJson.serviceurl) {
                     console.log("conf not matched");
+                    console.log(jwtPayload.iss + getJson.issuer);
+                    console.log(jwtHeader.alg + getJson.id_token_signing_alg_values_supported);
+                    console.log(jwtPayload.serviceurl + activityJson.serviceurl);
                     //res.write("Forbidden");
                     //res.end();
             }
