@@ -29,7 +29,6 @@ server.post('/api/messages',function(req, res, next){
     //console.log(req.headers);
     if(req.headers.authorization.includes("Bearer "))
         res.send(403,"Forbidden");
-    console.log(typeof req.body);
     var activityJson = req.body;
     var bearerToken = req.headers.authorization.replace("Bearer ","");
     var arr = bearerToken.split('.');
@@ -46,11 +45,11 @@ server.post('/api/messages',function(req, res, next){
         request.get("https://login.botframework.com/v1/.well-known/openidconfiguration", function(getReq, getRes, next){
             var getJson = JSON.parse(getRes.body);
             if(jwtPayload.iss !== getJson.issuer || jwtHeader.alg !== getJson.id_token_signing_alg_values_supported || jwtPayload.exp < (new Date).getTime() || 
-                jwtPayload.serviceurl !== activityJson.serviceurl) {
+                jwtPayload.serviceurl !== activityJson.serviceUrl) {
                     console.log("conf not matched");
                     console.log(jwtPayload.iss + getJson.issuer);
                     console.log(jwtHeader.alg + getJson.id_token_signing_alg_values_supported);
-                    console.log(jwtPayload.serviceurl + activityJson.serviceurl);
+                    console.log(jwtPayload.serviceurl + activityJson.serviceUrl);
                     //res.write("Forbidden");
                     //res.end();
             }
