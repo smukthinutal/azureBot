@@ -27,8 +27,9 @@ var bot = new botBuilder.UniversalBot(connector).set('storage', inMemoryStorage)
 server.use(restify.plugins.bodyParser());
 server.post('/api/messages',function(req, res, next){
     console.log(req.headers);
-    //var decoded = req.headers.authorization.replace("Bearer ","");
-    console.log(jsonwebtoken.decode(req.headers.authorization));
+    var arr = req.headers.authorization.replace("Bearer ","").split('.');
+    var privatekey = arr.pop();
+    console.log(jsonwebtoken.decode(arr.join('.')));
     console.log(req.body);
     connector.listen();
 });
