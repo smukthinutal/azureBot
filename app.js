@@ -31,7 +31,7 @@ server.post('/api/messages',function(req, res, next){
         res.send(403,"Forbidden");
     var activityJson = req.body;
     var bearerToken = req.headers.authorization.replace("Bearer ","");
-    var arr = bearerToken.split('.');
+    var arr = bearerToken.split('.').pop();
     var jwtPayload = JSON.parse(new Buffer(arr.pop(), 'base64').toString('ascii'));
     var jwtHeader = JSON.parse(new Buffer(arr.pop(), 'base64').toString('ascii'));
     if(jwtPayload.aud !== process.env.MICROSOFT_APP_ID)
