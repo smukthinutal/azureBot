@@ -38,8 +38,8 @@ server.post('/api/messages',function(req, res, next){
         request.get(getJson.jwks_uri, function(keyReq,keyRes,keyNext){
             var keysArray = JSON.parse(keyRes.body).keys;
             keysArray.forEach(function(key){
-                console.log(key.kid +  jwtHeader.kid);
                 if(key.kid !== jwtHeader.kid) return;
+                console.log(key.kid +  jwtHeader.kid);
                 console.log(key.x5c);
             });
         });
