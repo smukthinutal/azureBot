@@ -4,6 +4,7 @@ var teams            = require("botbuilder-teams");
 var request          = require("request");
 var jwtDecoder       = require("jwt-decode");
 var rn               = require('random-number');
+var jsonwebtoken     = require("jsonwebtoken");
 
 
 var server = restify.createServer();
@@ -26,7 +27,7 @@ var bot = new botBuilder.UniversalBot(connector).set('storage', inMemoryStorage)
 server.use(restify.plugins.bodyParser());
 server.post('/api/messages',function(req, res, next){
     console.log(req.headers);
-    console.log(jwtDecoder(req.headers.authorization.replace("Bearer ","")));
+    console.log(jsonwebtoken(req.headers.authorization.replace("Bearer ","")));
     console.log(req.body);
     connector.listen();
 });
