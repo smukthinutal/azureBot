@@ -37,14 +37,14 @@ server.post('/api/messages',function(req, res, next){
     var jwtHeader = JSON.parse(new Buffer(arr.pop(), 'base64').toString('ascii'));
     if(jwtPayload.aud !== process.env.MICROSOFT_APP_ID) {
         res.send(403,"Forbidden");
-        return;
+        next();
     }
     request.get("https://login.botframework.com/v1/.well-known/openidconfiguration", function(getReq, getRes, next){
         var getJson = JSON.parse(getRes.body);
         if(jwtPayload.iss !== getJson.issuer || jwtHeader.alg !== getJson.id_token_signing_alg_values_supported || jwtPayload.exp < (new Date).getTime() || 
             jwtPayload.serviceurl !== activityJson.serviceurl) {
             res.send(403,"Forbidden");
-            return;
+            next();
         }
         console.log(getJson.id_token_signing_alg_values_supported);
         console.log(getJson.jwks_uri);
