@@ -26,13 +26,24 @@ var bot = new botBuilder.UniversalBot(connector).set('storage', inMemoryStorage)
 
 server.use(restify.plugins.bodyParser());
 server.post('/api/messages',function(req, res, next){
-    console.log(req.headers);
+    //console.log(req.headers);
     var arr = req.headers.authorization.replace("Bearer ","").split('.');
     var privatekey = arr.pop();
     var jwtPayload = JSON.parse(new Buffer(arr.pop(), 'base64').toString('ascii'));
     var jwtHeader = JSON.parse(new Buffer(arr.pop(), 'base64').toString('ascii'));
-    console.log(jwtHeader + jwtPayload);
-    console.log()
+    request.get("https://login.botframework.com/v1/.well-known/openidconfiguration", function(getReq, getRes, next){
+        var getJson = JSON.parse(getRes.body);
+        console.log(getJson.id_token_signing_alg_values_supported);
+        console.log(getJson.jwks_uri);
+        request.get(getJson.jwks_uri, function(keyReq,keyRes,keyNext){
+            var keysArray = JSON.parse(keyRes.body).keys;
+            keysArray.forEach(function(key){
+                console.log(key.kid +  jwtHeader.kid);
+                if(key.kid !== jwtHeader.kid) continue;
+                console.log(key.x5c);
+            });
+        });
+    });
     console.log(req.body);
     //connector.listen();
 });
