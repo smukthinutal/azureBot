@@ -27,20 +27,32 @@ var bot = new botBuilder.UniversalBot(connector).set('storage', inMemoryStorage)
 server.use(restify.plugins.bodyParser());
 server.post('/api/messages',function(req, res, next){
     //console.log(req.headers);
-    var arr = req.headers.authorization.replace("Bearer ","").split('.');
-    var privatekey = arr.pop();
+    if(req.headers.authorization.includes("Bearer "))
+        res.send(403,"Forbidden");
+    var activityJson = JSON.parse(req.body);
+    var bearerToken = req.headers.authorization.replace("Bearer ","");
+    var arr = bearerToken.split('.');
     var jwtPayload = JSON.parse(new Buffer(arr.pop(), 'base64').toString('ascii'));
     var jwtHeader = JSON.parse(new Buffer(arr.pop(), 'base64').toString('ascii'));
+    if(jwtPayload.aud !== process.env.MICROSOFT_APP_ID)
+        res.send(403,"Forbidden");
     request.get("https://login.botframework.com/v1/.well-known/openidconfiguration", function(getReq, getRes, next){
         var getJson = JSON.parse(getRes.body);
+        if(jwtPayload.iss !== getJson.issuer || jwtHeader.alg !== getJson.id_token_signing_alg_values_supported || jwtPayload.exp < (new Date).getTime() || 
+            jwtPayload.serviceurl !== activityJson.serviceurl)
+            res.send(403,"Forbidden");
         console.log(getJson.id_token_signing_alg_values_supported);
         console.log(getJson.jwks_uri);
         request.get(getJson.jwks_uri, function(keyReq,keyRes,keyNext){
             var keysArray = JSON.parse(keyRes.body).keys;
             keysArray.forEach(function(key){
                 if(key.kid !== jwtHeader.kid) return;
-                console.log(key.kid +  jwtHeader.kid);
-                console.log(key.x5c);
+                console.log("valid Key: " + jwtHeader.kid);
+                console.log("listed Key: " + key.kid);
+                jsonwebtoken.verify(bearerToken,{key : activityJson.text}, function(err, decoded){
+                    if(err) console.log(err);
+                    console.log(decoded);
+                })
             });
         });
     });
