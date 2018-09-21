@@ -44,13 +44,13 @@ server.post('/api/messages',function(req, res, next){
     else {
         request.get("https://login.botframework.com/v1/.well-known/openidconfiguration", function(getReq, getRes, next){
             var getJson = JSON.parse(getRes.body);
-            if(jwtPayload.iss !== getJson.issuer || jwtHeader.alg !== getJson.id_token_signing_alg_values_supported || jwtPayload.exp < (new Date).getTime() || 
+            if(jwtPayload.iss !== getJson.issuer || jwtHeader.alg != getJson.id_token_signing_alg_values_supported || jwtPayload.exp < Math.round((new Date).getTime() / 1000) || 
                 jwtPayload.serviceurl !== activityJson.serviceUrl) {
                     console.log("conf not matched");
                     console.log(jwtPayload.iss !== getJson.issuer);
-                    console.log(jwtHeader.alg !== getJson.id_token_signing_alg_values_supported);
+                    console.log(jwtHeader.alg != getJson.id_token_signing_alg_values_supported);
                     console.log(jwtPayload.serviceurl !== activityJson.serviceUrl);
-                    console.log(jwtPayload.exp + "," + (new Date).getTime());
+                    console.log(jwtPayload.exp < (new Date).getTime());
                     //res.write("Forbidden");
                     //res.end();
             }
