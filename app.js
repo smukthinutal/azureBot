@@ -29,8 +29,8 @@ server.post('/api/messages',function(req, res, next){
     console.log(req.headers);
     var arr = req.headers.authorization.replace("Bearer ","").split('.');
     var privatekey = arr.pop();
-    var jwtPayload = JSON.parse(arr.pop().toString('ascii'));
-    var jwtHeader = JSON.parse(arr.pop().toString('ascii'));
+    var jwtPayload = JSON.parse(new Buffer(arr.pop(), 'base64').toString('ascii'));
+    var jwtHeader = JSON.parse(new Buffer(arr.pop(), 'base64').toString('ascii'));
     console.log(jwtHeader + jwtPayload);
     console.log()
     console.log(req.body);
