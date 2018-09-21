@@ -37,30 +37,34 @@ server.post('/api/messages',function(req, res, next){
     var jwtHeader = JSON.parse(new Buffer(arr.pop(), 'base64').toString('ascii'));
     if(jwtPayload.aud !== process.env.MICROSOFT_APP_ID) {
         res.send(403,"Forbidden");
-        next();
+        return;
     }
-    request.get("https://login.botframework.com/v1/.well-known/openidconfiguration", function(getReq, getRes, next){
-        var getJson = JSON.parse(getRes.body);
-        if(jwtPayload.iss !== getJson.issuer || jwtHeader.alg !== getJson.id_token_signing_alg_values_supported || jwtPayload.exp < (new Date).getTime() || 
-            jwtPayload.serviceurl !== activityJson.serviceurl) {
-            res.send(403,"Forbidden");
-            next();
-        }
-        console.log(getJson.id_token_signing_alg_values_supported);
-        console.log(getJson.jwks_uri);
-        request.get(getJson.jwks_uri, function(keyReq,keyRes,keyNext){
-            var keysArray = JSON.parse(keyRes.body).keys;
-            keysArray.forEach(function(key){
-                if(key.kid !== jwtHeader.kid) return;
-                console.log("valid Key: " + jwtHeader.kid);
-                console.log("listed Key: " + key.kid);
-                jsonwebtoken.verify(bearerToken,{key : activityJson.text}, function(err, decoded){
-                    if(err) console.log(err);
-                    console.log(decoded);
-                })
-            });
-        });
-    });
+    else {
+        request.get("https://login.botframework.com/v1/.well-known/openidconfiguration", function(getReq, getRes, next){
+            var getJson = JSON.parse(getRes.body);
+            if(jwtPayload.iss !== getJson.issuer || jwtHeader.alg !== getJson.id_token_signing_alg_values_supported || jwtPayload.exp < (new Date).getTime() || 
+                jwtPayload.serviceurl !== activityJson.serviceurl) {
+                res.send(403,"Forbidden");
+                return;
+            }
+            else {
+                console.log(getJson.id_token_signing_alg_values_supported);
+                console.log(getJson.jwks_uri);
+                request.get(getJson.jwks_uri, function(keyReq,keyRes,keyNext){
+                    var keysArray = JSON.parse(keyRes.body).keys;
+                    keysArray.forEach(function(key){
+                        if(key.kid !== jwtHeader.kid) return;
+                        console.log("valid Key: " + jwtHeader.kid);
+                        console.log("listed Key: " + key.kid);
+                        jsonwebtoken.verify(bearerToken,{key : activityJson.text}, function(err, decoded){
+                            if(err) console.log(err);
+                            console.log(decoded);
+                        })
+                    });
+                });
+            }
+        })
+    }
     console.log(req.body);
     //connector.listen();
 });
