@@ -113,8 +113,8 @@ server.post('/api/messages',function(req, res, next){
                                                             "id": process.env.MICROSOFT_APP_ID,
                                                             "name": "Trackerbot"
                                                         },
-                                                        "text": "Please [login](" + loginURL + process.env.csrfToken + "," + activityJson.channelId
-                                                                + "," + activityJson.from.aadObjectId + ")"
+                                                        "text": "Please [login](" + loginURL + process.env.csrfToken + "," + activityJson.conversation.id
+                                                                + "," + activityJson.from.Id + ")"
                                                     }
                                                 }
                                                 if(body) {
@@ -207,7 +207,7 @@ server.get("/verified", function(req, res, next){
    else {
        var tempArr = req.query.state.split(",");
        var userId = tempArr.pop();
-       var channelId = tempArr.pop();
+       var conversationId = tempArr.pop();
        var authURLOptions = {
            host: "https://login.microsoftonline.com/",
            path: process.env.TenantId + "/oauth2/token",
@@ -286,14 +286,14 @@ server.get("/verified", function(req, res, next){
                         "text": "You have been authenticated ( web)"
                         }
                 }
-                console.log(channelId + ","+ userId);
-                request.post("https://smba.trafficmanager.net/amer/v3/conversations/" + channelId + "/activities", 
+                console.log(conversationId + ","+ userId);
+                request.post("https://smba.trafficmanager.net/amer/v3/conversations/" + conversationId + "/activities", 
                              botPostHeaders, function(error, response, body){
                     if(error) console.log(error);
                     console.log("conv update: " + body);
                 });
                 botPostHeaders.json = { "data" : oauthAccessToken, "eTag" : "test"}
-                request.post("https://smba.trafficmanager.net/amer/v3/botstate/" + channelId + "/users/" + userId,
+                request.post("https://smba.trafficmanager.net/amer/v3/botstate/msteams/users/" + userId,
                               botPostHeaders, function(error, response, body){
                     if(error) console.log(error);
                     console.log("state data:" + body);
