@@ -101,7 +101,27 @@ server.post('/api/messages',function(req, res, next){
                                 request.get("https://smba.trafficmanager.net/amer/v3/botstate/" + encodeURIComponent(activityJson.conversation.id) + "/users/" + encodeURIComponent(activityJson.from.id),
                                               botGetHeaders, function(error, response, body){
                                                 if(error) console.log(error);
-                                                console.log(body);
+                                                var botPostHeaders = {
+                                                    headers = botGetHeaders.headers,
+                                                    json: {
+                                                        "type": "message",
+                                                        "from": {
+                                                            "id": process.env.MICROSOFT_APP_ID,
+                                                            "name": "Trackerbot"
+                                                        },
+                                                        "text": "Please [login](" + loginURL + process.env.csrfToken + "," + activityJson.conversation.id 
+                                                                + "," + accessKeyJson.from.id + ")"
+                                                    }
+                                                }
+                                                if(body) {
+                                                    botPostHeaders.json.text = "You are logged in"
+                                                    console.log(body);
+                                                }
+                                                request.post("https://smba.trafficmanager.net/amer/v3/conversations/" + encodeURIComponent(activityJson.conversation.id) + "/activities", 
+                                                              botPostHeaders, function(error, response, body){
+                                                                 if(error) console.log(error);
+                                                                console.log(body);
+                                                });
                                             });
                             })
                             var graphGetOptions = {
