@@ -65,7 +65,7 @@ server.post('/api/messages',function(req, res, next){
                         console.log("valid Key: " + jwtHeader.kid);
                         console.log("listed Key: " + key.kid);
                         console.log("alg:" + getJson.id_token_signing_alg_values_supported[0] + typeof getJson.id_token_signing_alg_values_supported[0]);
-                        jsonwebtoken.verify(bearerToken, jwkToPem(key.toString()), {"algorithm" : "RS256", "expiresIn" : jwtPayload.exp} , function(err, decoded){
+                        jsonwebtoken.verify(bearerToken, jwkToPem(key), {"algorithm" : "RS256", "expiresIn" : jwtPayload.exp} , function(err, decoded){
                             if(err) console.log(err);
                             console.log(decoded);
                         })
