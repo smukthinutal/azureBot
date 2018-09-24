@@ -68,16 +68,17 @@ server.post('/api/messages',function(req, res, next){
                         jsonwebtoken.verify(bearerToken, jwkToPem(key), {"algorithm" : "RS256", "expiresIn" : jwtPayload.exp} , function(err, decoded){
                             if(err) console.log(err);
                             console.log(decoded);
+                            console.log(activityJson);
                             var graphGetOptions = {
                                 headers : {
                                     "Content-Type" : "application/json",
                                     "Authorization": req.headers.authorization
                                 }
                             }
-                            request.get("https://graph.microsoft.com/v1.0/me", graphGetOptions, function(graphErr, graphRes, graphBody){
-                                if(graphErr) console.log(graphErr);
-                                console.log(graphBody);
-                            });
+                           // request.get("https://graph.microsoft.com/v1.0/me", graphGetOptions, function(graphErr, graphRes, graphBody){
+                           //     if(graphErr) console.log(graphErr);
+                           //     console.log(graphBody);
+                           // });
                         })
                     });
                 });
