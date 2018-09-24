@@ -221,6 +221,7 @@ server.get("/verified", function(req, res, next){
        request.post("https://login.microsoftonline.com/" + tenantId + "/oauth2/token", authURLOptions, function(error, response, body){
            console.log(error);
            var json = JSON.parse(body);
+           console.log(json);
            var decoded = jwtDecoder(json["id_token"]);
            var getOptions = {
                headers: {
