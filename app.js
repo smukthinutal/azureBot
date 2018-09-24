@@ -25,6 +25,10 @@ var inMemoryStorage = new botBuilder.MemoryBotStorage();
 
 var bot = new botBuilder.UniversalBot(connector).set('storage', inMemoryStorage);
 
+var loginURL = "https://login.microsoftonline.com/" + tenantId + "/oauth2/authorize?client_id=" + process.env.APP_CLIENT_ID +
+               "&response_type=code&redirect_uri=" + encodeURIComponent( "https://" + req.headers.host + "/verified") +
+               "&response_mode=query&resource=" + encodeURIComponent("https://graph.microsoft.com")+ "&state=";
+
 server.use(restify.plugins.bodyParser());
 server.post('/api/messages',function(req, res, next){
     //console.log(req.headers);
@@ -69,10 +73,35 @@ server.post('/api/messages',function(req, res, next){
                             if(err) console.log(err);
                             console.log(decoded);
                             console.log(activityJson);
-                            var session = new botBuilder.Session({"connector" : connector, "dialogId" : activityJson.conversation.id});
-                            session.userData.test = "test " + activityJson.id;
-                            console.log(session.userData);
+                            // TODO: Use Session object not botstate api call. 
+                            //var session = new botBuilder.Session({"connector" : connector, "dialogId" : activityJson.conversation.id,
+                            //                                       "library" : new botBuilder.library()
+                            //});
+                            //session.userData.test = "test " + activityJson.id;
+                            //console.log(session.userData);
                             //session.send("Hi");
+                            var botApiKeyOptions = {
+                                headers: {
+                                             "Content-type":  "application/x-www-form-urlencoded",
+                                },
+                                body: "grant_type=client_credentials&client_id=" + encodeURIComponent(process.env.MICROSOFT_APP_ID) +
+                                      "&client_secret=" + encodeURIComponent(process.env.MICROSOFT_APP_PASSWORD) + "&scope=https%3A%2F%2Fapi.botframework.com%2F.default"
+                            }
+                            request.get("https://login.microsoftonline.com/botframework.com/oauth2/v2.0/token", botApiKeyOptions, function(error, response, body){
+                                if(error) console.log("Error while accessing Api Token for bot" + error);
+                                var accessKeyJson = JSON.parse(body);
+                                var botGetHeaders = {
+                                    headers: {
+                                        "Authorization" : "Bearer " + accessKeyJson["access_token"],
+                                        "Content-Type"  : "application/json"
+                                    },
+                                }
+                                request.get("https://smba.trafficmanager.net/amer/v3/botstate/" + encodeURIComponent(activityJson.conversation.id) + "/users/" + encodeURIComponent(activityJson.from.id),
+                                              botGetHeaders, function(error, response, body){
+                                                if(error) console.log(error);
+                                                console.log(body);
+                                            });
+                            })
                             var graphGetOptions = {
                                 headers : {
                                     "Content-Type" : "application/json",
@@ -89,8 +118,9 @@ server.post('/api/messages',function(req, res, next){
             }
         })
     }
-    //connector.listen();
 });
+
+//server.post("/api/messages", connector.listen());
 
 var userKey = {};
 
@@ -101,6 +131,7 @@ var generateRandom = rn.generator(csrfRandomOptions);
 var csrfRandomNumber;
 
 bot.dialog('/', function(session){
+    console.log(session);
     //Commenting this part .. need to test this 
     //connector.getUserToken(session.message.address, process.env.CONNECTION, undefined, function(err, result) {
     //    if(result) {
@@ -146,8 +177,12 @@ server.get("/login",function(req, res, next){
 
 server.use(restify.plugins.queryParser());
 server.get("/verified", function(req, res, next){
-   if(parseInt(req.query.state) !== csrfRandomNumber) res.send(401, "CSRF error");
+   //if(parseInt(req.query.state) !== csrfRandomNumber) res.send(401, "CSRF error");
+   if(!req.query.state.match(process.env.csrfToken)) res.send(401, "CSRF error");
    else {
+       var tempArr = req.query.state.split(",");
+       var userId = tempArr.pop();
+       var channelId = tempArr.pop();
        var authURLOptions = {
            host: "https://login.microsoftonline.com/",
            path: tenantId + "/oauth2/token",
@@ -168,6 +203,7 @@ server.get("/verified", function(req, res, next){
                    "Authorization" : json["access_token"]
                }
            }
+           var oauthAccessToken = Buffer.from(json.toString()).toString("base64");
            var details = request.get("https://graph.microsoft.com/v1.0/me", getOptions, function(getError, getResponse, getBody){
                if(getResponse.statusCode !== 200) {
                    console.log("Refreshing token for user: " + decoded["unique_name"] );
@@ -224,7 +260,14 @@ server.get("/verified", function(req, res, next){
                         "text": "You have been authenticated ( web)"
                         }
                 }
-                request.post("https://smba.trafficmanager.net/amer/v3/conversations/" + encodeURIComponent(tempAddress) + "/activities", botPostHeaders, function(error, response, body){
+                request.post("https://smba.trafficmanager.net/amer/v3/conversations/" + encodeURIComponent(tempAddress) + "/activities", 
+                             botPostHeaders, function(error, response, body){
+                    if(error) console.log(error);
+                    console.log(body);
+                });
+                botPostHeaders.json = { "data" : oauthAccessToken, "eTag" : "test"}
+                request.post("https://smba.trafficmanager.net/amer/v3/botstate/" + encodeURIComponent(channelId) + "/users/" + encodeURIComponent(userId),
+                              botPostHeaders, function(error, response, body){
                     if(error) console.log(error);
                     console.log(body);
                 });
