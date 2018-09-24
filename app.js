@@ -89,6 +89,8 @@ server.post('/api/messages',function(req, res, next){
                             }
                             request.get("https://login.microsoftonline.com/botframework.com/oauth2/v2.0/token", botApiKeyOptions, function(error, response, body){
                                 if(error) console.log("Error while accessing Api Token for bot" + error);
+                                console.log(body);
+                                console.log(activityJson.conversation.id + activityJson.from.id);
                                 var accessKeyJson = JSON.parse(body);
                                 var botGetHeaders = {
                                     headers: {
