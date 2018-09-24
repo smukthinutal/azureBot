@@ -71,7 +71,7 @@ server.post('/api/messages',function(req, res, next){
                             var graphGetOptions = {
                                 headers : {
                                     "Content-Type" : "application/json",
-                                    "Authorization": bearerToken
+                                    "Authorization": req.headers.authorization
                                 }
                             }
                             request.get("https://graph.microsoft.com/v1.0/me", graphGetOptions, function(graphErr, graphRes, graphBody){
