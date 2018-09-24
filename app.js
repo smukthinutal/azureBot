@@ -206,8 +206,8 @@ server.get("/verified", function(req, res, next){
    if(!req.query.state.match(process.env.csrfToken)) res.send(401, "CSRF error");
    else {
        var tempArr = req.query.state.split(",");
-       var userId = decodeURIComponent(tempArr.pop());
-       var channelId = decodeURIComponent(tempArr.pop());
+       var userId = tempArr.pop();
+       var channelId = tempArr.pop();
        var authURLOptions = {
            host: "https://login.microsoftonline.com/",
            path: process.env.TenantId + "/oauth2/token",
