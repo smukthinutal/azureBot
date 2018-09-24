@@ -101,6 +101,7 @@ server.post('/api/messages',function(req, res, next){
                                 request.get("https://smba.trafficmanager.net/amer/v3/botstate/" + encodeURIComponent(activityJson.conversation.id) + "/users/" + encodeURIComponent(activityJson.from.id),
                                               botGetHeaders, function(error, response, body){
                                                 if(error) console.log(error);
+                                                console.log("Bot state get: " + body);
                                                 var botPostHeaders = {
                                                     headers: {
                                                         "Authorization" : "Bearer " + accessKeyJson["access_token"],
@@ -118,7 +119,6 @@ server.post('/api/messages',function(req, res, next){
                                                 }
                                                 if(body) {
                                                     botPostHeaders.json.text = "You are logged in"
-                                                    console.log(body);
                                                 }
                                                 request.post("https://smba.trafficmanager.net/amer/v3/conversations/" + encodeURIComponent(activityJson.conversation.id) + "/activities", 
                                                               botPostHeaders, function(error, response, body){
@@ -290,13 +290,13 @@ server.get("/verified", function(req, res, next){
                 request.post("https://smba.trafficmanager.net/amer/v3/conversations/" + channelId + "/activities", 
                              botPostHeaders, function(error, response, body){
                     if(error) console.log(error);
-                    console.log(body);
+                    console.log("conv update: " + body);
                 });
                 botPostHeaders.json = { "data" : oauthAccessToken, "eTag" : "test"}
                 request.post("https://smba.trafficmanager.net/amer/v3/botstate/" + channelId + "/users/" + userId,
                               botPostHeaders, function(error, response, body){
                     if(error) console.log(error);
-                    console.log(body);
+                    console.log("state data:" + body);
                 });
            })
            res.send(200, "Successfully authenticated");
