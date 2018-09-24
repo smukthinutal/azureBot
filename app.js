@@ -102,7 +102,10 @@ server.post('/api/messages',function(req, res, next){
                                               botGetHeaders, function(error, response, body){
                                                 if(error) console.log(error);
                                                 var botPostHeaders = {
-                                                    headers = botGetHeaders.headers,
+                                                    headers: {
+                                                        "Authorization" : "Bearer " + accessKeyJson["access_token"],
+                                                        "Content-Type"  : "application/json"
+                                                    },
                                                     json: {
                                                         "type": "message",
                                                         "from": {
