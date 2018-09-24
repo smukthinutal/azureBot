@@ -28,13 +28,13 @@ var bot = new botBuilder.UniversalBot(connector).set('storage', inMemoryStorage)
 server.use(restify.plugins.bodyParser());
 server.post('/api/messages',function(req, res, next){
     //console.log(req.headers);
-    var loginURL = "https://login.microsoftonline.com/" + tenantId + "/oauth2/authorize?client_id=" + process.env.APP_CLIENT_ID +
-                   "&response_type=code&redirect_uri=" + encodeURIComponent( "https://" + req.headers.host + "/verified") +
-                   "&response_mode=query&resource=" + encodeURIComponent("https://graph.microsoft.com")+ "&state=";
-
     if(req.headers.authorization.includes("Bearer "))
         res.send(403,"Forbidden");
     var activityJson = req.body;
+    var loginURL = "https://login.microsoftonline.com/" + activityJson.channelData.tenant.id + "/oauth2/authorize?client_id=" + process.env.APP_CLIENT_ID +
+                   "&response_type=code&redirect_uri=" + encodeURIComponent( "https://" + req.headers.host + "/verified") +
+                   "&response_mode=query&resource=" + encodeURIComponent("https://graph.microsoft.com")+ "&state=";
+
     var bearerToken = req.headers.authorization.replace("Bearer ","");
     var arr = bearerToken.split('.');
     arr.pop();
