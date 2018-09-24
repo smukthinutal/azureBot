@@ -206,8 +206,8 @@ server.get("/verified", function(req, res, next){
    if(!req.query.state.match(process.env.csrfToken)) res.send(401, "CSRF error");
    else {
        var tempArr = req.query.state.split(",");
-       var userId = tempArr.pop();
-       var channelId = tempArr.pop();
+       var userId = decodeURIComponent(tempArr.pop());
+       var channelId = decodeURIComponent(tempArr.pop());
        var authURLOptions = {
            host: "https://login.microsoftonline.com/",
            path: process.env.TenantId + "/oauth2/token",
@@ -286,13 +286,14 @@ server.get("/verified", function(req, res, next){
                         "text": "You have been authenticated ( web)"
                         }
                 }
-                request.post("https://smba.trafficmanager.net/amer/v3/conversations/" + encodeURIComponent(tempAddress) + "/activities", 
+                console.log(channelId + ","+ userId);
+                request.post("https://smba.trafficmanager.net/amer/v3/conversations/" + channelId + "/activities", 
                              botPostHeaders, function(error, response, body){
                     if(error) console.log(error);
                     console.log(body);
                 });
                 botPostHeaders.json = { "data" : oauthAccessToken, "eTag" : "test"}
-                request.post("https://smba.trafficmanager.net/amer/v3/botstate/" + encodeURIComponent(channelId) + "/users/" + encodeURIComponent(userId),
+                request.post("https://smba.trafficmanager.net/amer/v3/botstate/" + channelId + "/users/" + userId,
                               botPostHeaders, function(error, response, body){
                     if(error) console.log(error);
                     console.log(body);
