@@ -98,7 +98,7 @@ server.post('/api/messages',function(req, res, next){
                                         "Content-Type"  : "application/json"
                                     },
                                 }
-                                request.get("https://smba.trafficmanager.net/amer/v3/botstate/" + encodeURIComponent(activityJson.conversation.id) + "/users/" + encodeURIComponent(activityJson.from.id),
+                                request.get("https://smba.trafficmanager.net/amer/v3/botstate/" + encodeURIComponent(activityJson.channelId) + "/users/" + encodeURIComponent(activityJson.from.id),
                                               botGetHeaders, function(error, response, body){
                                                 if(error) console.log(error);
                                                 console.log("Bot state get: " + body);
@@ -113,7 +113,7 @@ server.post('/api/messages',function(req, res, next){
                                                             "id": process.env.MICROSOFT_APP_ID,
                                                             "name": "Trackerbot"
                                                         },
-                                                        "text": "Please [login](" + loginURL + process.env.csrfToken + "," + activityJson.conversation.id 
+                                                        "text": "Please [login](" + loginURL + process.env.csrfToken + "," + activityJson.channelId
                                                                 + "," + activityJson.from.id + ")"
                                                     }
                                                 }
