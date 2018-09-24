@@ -194,7 +194,7 @@ bot.dialog('/', function(session){
 
 server.get("/login",function(req, res, next){
     csrfRandomNumber = generateRandom();
-    var loginURL = "https://login.microsoftonline.com/" + tenantId + "/oauth2/authorize?client_id=" + process.env.APP_CLIENT_ID +
+    var loginURL = "https://login.microsoftonline.com/" + process.env.TenantId + "/oauth2/authorize?client_id=" + process.env.APP_CLIENT_ID +
                    "&response_type=code&redirect_uri=" + encodeURIComponent( "https://" + req.headers.host + "/verified") +
                    "&response_mode=query&resource=" + encodeURIComponent("https://graph.microsoft.com")+ "&state=" + csrfRandomNumber;
    res.redirect(loginURL, next);
@@ -210,7 +210,7 @@ server.get("/verified", function(req, res, next){
        var channelId = tempArr.pop();
        var authURLOptions = {
            host: "https://login.microsoftonline.com/",
-           path: tenantId + "/oauth2/token",
+           path: process.env.TenantId + "/oauth2/token",
            headers: {
                "Content-type":  "application/x-www-form-urlencoded",
            },
@@ -218,7 +218,7 @@ server.get("/verified", function(req, res, next){
                encodeURIComponent("https://" + req.headers.host + "/verified") + "&resource=" + encodeURIComponent("https://graph.microsoft.com") +
                "&client_secret=" + encodeURIComponent(process.env.APP_KEY)
        }
-       request.post("https://login.microsoftonline.com/" + tenantId + "/oauth2/token", authURLOptions, function(error, response, body){
+       request.post("https://login.microsoftonline.com/" + process.env.TenantId + "/oauth2/token", authURLOptions, function(error, response, body){
            console.log(error);
            var json = JSON.parse(body);
            console.log(json);
@@ -243,7 +243,7 @@ server.get("/verified", function(req, res, next){
                                "&resource=" + encodeURIComponent("https://graph.microsoft.com") +
                                "&client_secret=" + encodeURIComponent(process.env.APP_KEY)
                    }
-                   request.post("https://login.microsoftonline.com/" + tenantId + "/oauth2/token", refreshOptions, function(refreshError, refreshResponse, refreshBody){
+                   request.post("https://login.microsoftonline.com/" + process.env.TenantId + "/oauth2/token", refreshOptions, function(refreshError, refreshResponse, refreshBody){
                        console.log(refreshError);
                       // console.log(refreshBody);
                        var refreshJson = JSON.parse(refreshBody);
