@@ -69,7 +69,7 @@ server.post('/api/messages',function(req, res, next){
                             if(err) console.log(err);
                             console.log(decoded);
                             console.log(activityJson);
-                            var session = botBuilder.Session({"connector" : connector, "dialogId" : activityJson.conversation.id});
+                            var session = new botBuilder.Session({"connector" : connector, "dialogId" : activityJson.conversation.id});
                             session.send("Hi");
                             var graphGetOptions = {
                                 headers : {
