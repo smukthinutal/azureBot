@@ -18,8 +18,6 @@ var connector = new botBuilder.ChatConnector({
     appPassword: process.env.MICROSOFT_APP_PASSWORD// || botConfig.microsoftAppPassword
 });
 
-var tenantId;
-
 
 var inMemoryStorage = new botBuilder.MemoryBotStorage();
 
@@ -246,7 +244,6 @@ server.get("/verified", function(req, res, next){
                    console.log(getError);
                }
            });
-           userKey[decoded.name] = "authenticated";
            var botApiKeyOptions = {
                headers: {
                             "Content-type":  "application/x-www-form-urlencoded",
