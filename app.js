@@ -98,6 +98,9 @@ server.post('/api/messages',function(req, res, next){
                                         "Content-Type"  : "application/json"
                                     },
                                 }
+                                inMemoryStorage.getData({"persistConversationData" : "true", "persistUserData" : "true", "userId" : activityJson.from.id}, function(err, data){
+                                    console.log(data.userData);
+                                });
                                 request.get("https://smba.trafficmanager.net/amer/v3/botstate/" + encodeURIComponent(activityJson.channelId) + "/users/" + encodeURIComponent(activityJson.from.id),
                                               botGetHeaders, function(error, response, body){
                                                 if(error) console.log(error);
@@ -220,7 +223,7 @@ server.get("/verified", function(req, res, next){
                "&client_secret=" + encodeURIComponent(process.env.APP_KEY)
        }
        request.post("https://login.microsoftonline.com/" + process.env.TenantId + "/oauth2/token", authURLOptions, function(error, response, body){
-           console.log(error);
+           if(error) console.log(error);
            var json = JSON.parse(body);
            console.log(json);
            var decoded = jwtDecoder(json["id_token"]);
@@ -294,6 +297,9 @@ server.get("/verified", function(req, res, next){
                     console.log("conv update: " + body);
                 });
                 botPostHeaders.json = { "data" : oauthAccessToken, "eTag" : "test"}
+                inMemoryStorage.saveData({"userId" : activityJson.from.id}, {"userData" : oauthAccessToken} , function(err){
+                    if(err) console.log(err);
+                });
                 request.post("https://smba.trafficmanager.net/amer/v3/botstate/msteams/users/" + userId,
                               botPostHeaders, function(error, response, body){
                     if(error) console.log(error);
