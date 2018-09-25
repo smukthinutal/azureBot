@@ -101,6 +101,7 @@ server.post('/api/messages',function(req, res, next){
                                 inMemoryStorage.getData({"persistConversationData" : "true", "persistUserData" : "true", "userId" : activityJson.from.id}, function(err, data){
                                     if(err) console.log("Error at getData: " +  err);
                                     console.log("getData SDK: %s",data.userData);
+                                    console.log("decoded data: %s", new Buffer(data.userData, 'base64').toString('ascii'));
                                 });
                                 request.get("https://smba.trafficmanager.net/amer/v3/botstate/" + encodeURIComponent(activityJson.channelId) + "/users/" + encodeURIComponent(activityJson.from.id),
                                               botGetHeaders, function(error, response, body){
