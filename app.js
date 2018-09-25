@@ -114,7 +114,7 @@ server.post('/api/messages',function(req, res, next){
                                                             "name": "Trackerbot"
                                                         },
                                                         "text": "Please [login](" + loginURL + process.env.csrfToken + "," + activityJson.conversation.id
-                                                                + "," + activityJson.from.Id + ")"
+                                                                + "," + activityJson.from.id + ")"
                                                     }
                                                 }
                                                 if(body) {
