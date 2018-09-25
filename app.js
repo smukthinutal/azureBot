@@ -127,7 +127,7 @@ server.post('/api/messages',function(req, res, next){
                                         }
                                         request.get("https://graph.microsoft.com/v1.0/me", graphGetOptions, function(graphErr, graphRes, graphBody){
                                             if(graphErr) console.log(graphErr);
-                                            if(getResponse.statusCode !== 200) {
+                                            if(graphRes.statusCode !== 200) {
                                                 console.log("Refreshing token for user: " + decoded["unique_name"] );
                                                 var refreshOptions = {
                                                     host: "https://login.microsoftonline.com",
