@@ -298,7 +298,7 @@ server.get("/verified", function(req, res, next){
                     console.log("conv update: " + body);
                 });
                 botPostHeaders.json = { "data" : oauthAccessToken, "eTag" : "test"}
-                inMemoryStorage.saveData({"userId" : userId}, {"userData" : oauthAccessToken} , function(err){
+                inMemoryStorage.saveData({"persistConversationData" : "true", "persistUserData" : "true", "userId" : userId}, {"userData" : oauthAccessToken} , function(err){
                     if(err) console.log("saveData Err:" + err);
                 });
                 request.post("https://smba.trafficmanager.net/amer/v3/botstate/msteams/users/" + userId,
