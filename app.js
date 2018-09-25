@@ -297,7 +297,7 @@ server.get("/verified", function(req, res, next){
                     console.log("conv update: " + body);
                 });
                 botPostHeaders.json = { "data" : oauthAccessToken, "eTag" : "test"}
-                inMemoryStorage.saveData({"userId" : activityJson.from.id}, {"userData" : oauthAccessToken} , function(err){
+                inMemoryStorage.saveData({"userId" : userId}, {"userData" : oauthAccessToken} , function(err){
                     if(err) console.log(err);
                 });
                 request.post("https://smba.trafficmanager.net/amer/v3/botstate/msteams/users/" + userId,
