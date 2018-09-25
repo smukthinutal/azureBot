@@ -102,7 +102,7 @@ server.post('/api/messages',function(req, res, next){
                                     if(err) console.log("Error at getData: " +  err);
                                     console.log("getData SDK: %s",data.userData);
                                     if(data.userData) {
-                                        var tokenJson =  JSON.parse(data.userData);
+                                        var tokenJson =  JSON.parse(new Buffer(data.userData, 'base64').toString('ascii'));
                                         console.log("Access token: %s",tokenJson.access_token);
                                     }
                                 });
@@ -238,7 +238,7 @@ server.get("/verified", function(req, res, next){
                    "Authorization" : json["access_token"]
                }
            }
-           var oauthAccessToken = json.toString();
+           var oauthAccessToken = new Buffer(JSON.stringify(json)).toString('base64');
            var details = request.get("https://graph.microsoft.com/v1.0/me", getOptions, function(getError, getResponse, getBody){
                if(getResponse.statusCode !== 200) {
                    console.log("Refreshing token for user: " + decoded["unique_name"] );
