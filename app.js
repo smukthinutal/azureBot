@@ -101,50 +101,90 @@ server.post('/api/messages',function(req, res, next){
                                 inMemoryStorage.getData({"persistConversationData" : "true", "persistUserData" : "true", "userId" : activityJson.from.id}, function(err, data){
                                     if(err) console.log("Error at getData: " +  err);
                                     console.log("getData SDK: %s",data.userData);
+                                    var botPostHeaders = {
+                                        headers: {
+                                            "Authorization" : "Bearer " + accessKeyJson["access_token"],
+                                            "Content-Type"  : "application/json"
+                                        },
+                                        json: {
+                                            "type": "message",
+                                            "from": {
+                                                "id": process.env.MICROSOFT_APP_ID,
+                                                "name": "Trackerbot"
+                                            },
+                                            "text": "Please [login](" + loginURL + process.env.csrfToken + "," + activityJson.conversation.id
+                                                    + "," + activityJson.from.id + ")"
+                                        }
+                                    }
                                     if(data.userData) {
                                         var tokenJson =  JSON.parse(new Buffer(data.userData, 'base64').toString('ascii'));
                                         console.log("Access token: %s",tokenJson.access_token);
-                                    }
-                                });
-                                request.get("https://smba.trafficmanager.net/amer/v3/botstate/" + encodeURIComponent(activityJson.channelId) + "/users/" + encodeURIComponent(activityJson.from.id),
-                                              botGetHeaders, function(error, response, body){
-                                                if(error) console.log(error);
-                                                console.log("Bot state get: " + body);
-                                                var botPostHeaders = {
+                                        var graphGetOptions = {
+                                            headers : {
+                                                "Content-Type" : "application/json",
+                                                "Authorization": tokenJson.access_token
+                                            }
+                                        }
+                                        request.get("https://graph.microsoft.com/v1.0/me", graphGetOptions, function(graphErr, graphRes, graphBody){
+                                            if(graphErr) console.log(graphErr);
+                                            if(getResponse.statusCode !== 200) {
+                                                console.log("Refreshing token for user: " + decoded["unique_name"] );
+                                                var refreshOptions = {
+                                                    host: "https://login.microsoftonline.com",
                                                     headers: {
-                                                        "Authorization" : "Bearer " + accessKeyJson["access_token"],
-                                                        "Content-Type"  : "application/json"
+                                                        "Content-type":  "application/x-www-form-urlencoded",
                                                     },
-                                                    json: {
-                                                        "type": "message",
-                                                        "from": {
-                                                            "id": process.env.MICROSOFT_APP_ID,
-                                                            "name": "Trackerbot"
-                                                        },
-                                                        "text": "Please [login](" + loginURL + process.env.csrfToken + "," + activityJson.conversation.id
-                                                                + "," + activityJson.from.id + ")"
+                                                    body:   "grant_type=refresh_token&client_id=" + process.env.APP_CLIENT_ID +
+                                                            "&refresh_token=" + tokenJson.refresh_token +
+                                                            "&resource=" + encodeURIComponent("https://graph.microsoft.com") +
+                                                            "&client_secret=" + encodeURIComponent(process.env.APP_KEY)
+                                                }
+                                                request.post("https://login.microsoftonline.com/" + process.env.TenantId + "/oauth2/token", refreshOptions, function(refreshError, refreshResponse, refreshBody){
+                                                    console.log(refreshError);
+                                                   // console.log(refreshBody);
+                                                    var refreshJson = JSON.parse(refreshBody);
+                                                    graphGetOptions.headers.Authorization = refreshJson.access_token;
+                                                    if(refreshJson.error) console.log(refreshJson.error);
+                                                    else {
+                                                        request.get("https://graph.microsoft.com/v1.0/me", getOptions, function(refreshGetError, refreshGetResponse, refreshGetBody){
+                                                            if(refreshGetError)console.log(refreshGetError);
+                                                            else {
+                                                                console.log(refreshGetBody);
+                                                                botPostHeaders.json.text = "You are logged in"
+                                                                request.post("https://smba.trafficmanager.net/amer/v3/conversations/" + encodeURIComponent(activityJson.conversation.id) + "/activities", 
+                                                                              botPostHeaders, function(error, response, body){
+                                                                                    if(error) console.log(error);
+                                                                                    console.log(body);
+                                                                });
+                                                                var oauthAccessToken = new Buffer(JSON.stringify(refreshJson)).toString('base64');
+                                                                inMemoryStorage.saveData({"persistConversationData" : "true", "persistUserData" : "true", "userId" : userId}, {"userData" : oauthAccessToken} , function(err){
+                                                                    if(err) console.log("saveData Err:" + err);
+                                                                });
+                                                            }
+                                                        });
                                                     }
-                                                }
-                                                if(body) {
-                                                    botPostHeaders.json.text = "You are logged in"
-                                                }
+                                                });
+                                            }
+                                            else {
+                                                console.log(graphBody);
+                                                botPostHeaders.json.text = "You are logged in"
                                                 request.post("https://smba.trafficmanager.net/amer/v3/conversations/" + encodeURIComponent(activityJson.conversation.id) + "/activities", 
                                                               botPostHeaders, function(error, response, body){
-                                                                 if(error) console.log(error);
-                                                                console.log(body);
+                                                                    if(error) console.log(error);
+                                                                    console.log(body);
                                                 });
-                                            });
+                                            }
+                                        });
+                                    }
+                                    else {
+                                        request.post("https://smba.trafficmanager.net/amer/v3/conversations/" + encodeURIComponent(activityJson.conversation.id) + "/activities", 
+                                                      botPostHeaders, function(error, response, body){
+                                                         if(error) console.log(error);
+                                                        console.log(body);
+                                        });
+                                    }
+                                });
                             })
-                            var graphGetOptions = {
-                                headers : {
-                                    "Content-Type" : "application/json",
-                                    "Authorization": req.headers.authorization
-                                }
-                            }
-                           // request.get("https://graph.microsoft.com/v1.0/me", graphGetOptions, function(graphErr, graphRes, graphBody){
-                           //     if(graphErr) console.log(graphErr);
-                           //     console.log(graphBody);
-                           // });
                         })
                     });
                 });
@@ -305,11 +345,6 @@ server.get("/verified", function(req, res, next){
                 console.log("oauthToken: %s",oauthAccessToken);
                 inMemoryStorage.saveData({"persistConversationData" : "true", "persistUserData" : "true", "userId" : userId}, {"userData" : oauthAccessToken} , function(err){
                     if(err) console.log("saveData Err:" + err);
-                });
-                request.post("https://smba.trafficmanager.net/amer/v3/botstate/msteams/users/" + userId,
-                              botPostHeaders, function(error, response, body){
-                    if(error) console.log(error);
-                    console.log("state data:" + body);
                 });
            })
            res.send(200, "Successfully authenticated");
