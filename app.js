@@ -298,6 +298,7 @@ server.get("/verified", function(req, res, next){
                     console.log("conv update: " + body);
                 });
                 botPostHeaders.json = { "data" : oauthAccessToken, "eTag" : "test"}
+                console.log("oauthToken: %s",oauthAccessToken);
                 inMemoryStorage.saveData({"persistConversationData" : "true", "persistUserData" : "true", "userId" : userId}, {"userData" : oauthAccessToken} , function(err){
                     if(err) console.log("saveData Err:" + err);
                 });
