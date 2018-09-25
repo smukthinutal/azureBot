@@ -27,7 +27,6 @@ var bot = new botBuilder.UniversalBot(connector).set('storage', inMemoryStorage)
 
 server.use(restify.plugins.bodyParser());
 server.post('/api/messages',function(req, res, next){
-    //console.log(req.headers);
     if(req.headers.authorization.includes("Bearer "))
         res.send(403,"Forbidden");
     var activityJson = req.body;
@@ -73,13 +72,6 @@ server.post('/api/messages',function(req, res, next){
                             if(err) console.log(err);
                             console.log(decoded);
                             console.log(activityJson);
-                            // TODO: Use Session object not botstate api call. 
-                            //var session = new botBuilder.Session({"connector" : connector, "dialogId" : activityJson.conversation.id,
-                            //                                       "library" : new botBuilder.library()
-                            //});
-                            //session.userData.test = "test " + activityJson.id;
-                            //console.log(session.userData);
-                            //session.send("Hi");
                             var botApiKeyOptions = {
                                 headers: {
                                              "Content-type":  "application/x-www-form-urlencoded",
@@ -195,62 +187,8 @@ server.post('/api/messages',function(req, res, next){
 
 //server.post("/api/messages", connector.listen());
 
-var userKey = {};
-
-var tempAddress;
-
-var csrfRandomOptions = { min: 0, max: 100000, integer: true};
-var generateRandom = rn.generator(csrfRandomOptions);
-var csrfRandomNumber;
-
-bot.dialog('/', function(session){
-    console.log(session);
-    //Commenting this part .. need to test this 
-    //connector.getUserToken(session.message.address, process.env.CONNECTION, undefined, function(err, result) {
-    //    if(result) {
-    //        session.send("You are already signed in (SDK)");
-    //    }
-    //    else {
-    //        console.log(err);
-    //        if(!session.userData.accessKey) {
-    //            botBuilder.OAuthCard.create(connector, session, process.env.CONNECTION, "Please sign in", function(createSignErr, signInMessage) {
-    //                if(signInMessage) {
-    //                    session.send(signInMessage);
-    //                    session.userData.accessKey = 1;
-    //                }
-    //                else {
-    //                    session.send("Issue with your signin: %s", createSignErr);
-    //                }
-    //            })
-    //        }
-    //    }
-    //});
-    tenantId = teams.TeamsMessage.getTenantId(session.message);
-    //tempAddress = session.message.address;
-    tempAddress = session.message.address.conversation.id;
-    if(session.userData.accessKey) {
-        session.send("Hi %s, you are already logged in", session.message.user.name);
-    }
-    else if( userKey[session.message.user.name]) {
-        session.userData.accessKey = userKey[session.message.user.name];
-        session.send("Hi %s, you are already logged in", session.message.user.name);
-    }
-    else {
-        session.send("You have to [login](https://test-teams-bot.herokuapp.com/login) before using this bot");
-    }
-});
-
-server.get("/login",function(req, res, next){
-    csrfRandomNumber = generateRandom();
-    var loginURL = "https://login.microsoftonline.com/" + process.env.TenantId + "/oauth2/authorize?client_id=" + process.env.APP_CLIENT_ID +
-                   "&response_type=code&redirect_uri=" + encodeURIComponent( "https://" + req.headers.host + "/verified") +
-                   "&response_mode=query&resource=" + encodeURIComponent("https://graph.microsoft.com")+ "&state=" + csrfRandomNumber;
-   res.redirect(loginURL, next);
-});
-
 server.use(restify.plugins.queryParser());
 server.get("/verified", function(req, res, next){
-   //if(parseInt(req.query.state) !== csrfRandomNumber) res.send(401, "CSRF error");
    if(!req.query.state.match(process.env.csrfToken)) res.send(401, "CSRF error");
    else {
        var tempArr = req.query.state.split(",");
@@ -294,13 +232,11 @@ server.get("/verified", function(req, res, next){
                    }
                    request.post("https://login.microsoftonline.com/" + process.env.TenantId + "/oauth2/token", refreshOptions, function(refreshError, refreshResponse, refreshBody){
                        console.log(refreshError);
-                      // console.log(refreshBody);
                        var refreshJson = JSON.parse(refreshBody);
                        getOptions.headers.Authorization = refreshJson.access_token;
                        if(refreshJson.error) console.log(refreshJson.error);
                        else {
                            request.get("https://graph.microsoft.com/v1.0/me", getOptions, function(refreshGetError, refreshGetResponse, refreshGetBody){
-                              // console.log(refreshGetBody);
                                console.log(refreshGetError);
                            });
                        }
