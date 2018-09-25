@@ -206,6 +206,7 @@ server.get("/verified", function(req, res, next){
    if(!req.query.state.match(process.env.csrfToken)) res.send(401, "CSRF error");
    else {
        var tempArr = req.query.state.split(",");
+       console.log("tempArr:" + req.query.state);
        var userId = tempArr.pop();
        var conversationId = tempArr.pop();
        var authURLOptions = {
@@ -286,7 +287,7 @@ server.get("/verified", function(req, res, next){
                         "text": "You have been authenticated ( web)"
                         }
                 }
-                console.log(conversationId + ","+ userId);
+                console.log("conv, user:" + conversationId + ","+ userId);
                 request.post("https://smba.trafficmanager.net/amer/v3/conversations/" + conversationId + "/activities", 
                              botPostHeaders, function(error, response, body){
                     if(error) console.log(error);
