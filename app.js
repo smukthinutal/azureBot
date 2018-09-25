@@ -99,7 +99,8 @@ server.post('/api/messages',function(req, res, next){
                                     },
                                 }
                                 inMemoryStorage.getData({"persistConversationData" : "true", "persistUserData" : "true", "userId" : activityJson.from.id}, function(err, data){
-                                    console.log(data.userData);
+                                    if(err) console.log("Error at getData: " +  err);
+                                    console.log("getData SDK: %s",data.userData);
                                 });
                                 request.get("https://smba.trafficmanager.net/amer/v3/botstate/" + encodeURIComponent(activityJson.channelId) + "/users/" + encodeURIComponent(activityJson.from.id),
                                               botGetHeaders, function(error, response, body){
@@ -298,7 +299,7 @@ server.get("/verified", function(req, res, next){
                 });
                 botPostHeaders.json = { "data" : oauthAccessToken, "eTag" : "test"}
                 inMemoryStorage.saveData({"userId" : userId}, {"userData" : oauthAccessToken} , function(err){
-                    if(err) console.log(err);
+                    if(err) console.log("saveData Err:" + err);
                 });
                 request.post("https://smba.trafficmanager.net/amer/v3/botstate/msteams/users/" + userId,
                               botPostHeaders, function(error, response, body){
