@@ -1,9 +1,7 @@
 var restify          = require("restify");
 var botBuilder       = require("botbuilder");
-var teams            = require("botbuilder-teams");
 var request          = require("request");
 var jwtDecoder       = require("jwt-decode");
-var rn               = require('random-number');
 var jsonwebtoken     = require("jsonwebtoken");
 var jwkToPem         = require("jwk-to-pem");
 
@@ -82,12 +80,6 @@ server.post('/api/messages',function(req, res, next){
                                 console.log(body);
                                 console.log(activityJson.conversation.id + activityJson.from.id);
                                 var accessKeyJson = JSON.parse(body);
-                                var botGetHeaders = {
-                                    headers: {
-                                        "Authorization" : "Bearer " + accessKeyJson["access_token"],
-                                        "Content-Type"  : "application/json"
-                                    },
-                                }
                                 inMemoryStorage.getData({"persistConversationData" : "true", "persistUserData" : "true", "userId" : activityJson.from.id}, function(err, data){
                                     if(err) console.log("Error at getData: " +  err);
                                     console.log("getData SDK: %s",data.userData);
@@ -136,7 +128,7 @@ server.post('/api/messages',function(req, res, next){
                                                     graphGetOptions.headers.Authorization = refreshJson.access_token;
                                                     if(refreshJson.error) console.log(refreshJson.error);
                                                     else {
-                                                        request.get("https://graph.microsoft.com/v1.0/me", getOptions, function(refreshGetError, refreshGetResponse, refreshGetBody){
+                                                        request.get("https://graph.microsoft.com/v1.0/me", graphGetOptions, function(refreshGetError, refreshGetResponse, refreshGetBody){
                                                             if(refreshGetError)console.log(refreshGetError);
                                                             else {
                                                                 console.log(refreshGetBody);
@@ -147,7 +139,7 @@ server.post('/api/messages',function(req, res, next){
                                                                                     console.log(body);
                                                                 });
                                                                 var oauthAccessToken = new Buffer(JSON.stringify(refreshJson)).toString('base64');
-                                                                inMemoryStorage.saveData({"persistConversationData" : "true", "persistUserData" : "true", "userId" : userId}, {"userData" : oauthAccessToken} , function(err){
+                                                                inMemoryStorage.saveData({"persistConversationData" : "true", "persistUserData" : "true", "userId" : activityJson.from.id}, {"userData" : oauthAccessToken} , function(err){
                                                                     if(err) console.log("saveData Err:" + err);
                                                                 });
                                                             }
@@ -278,6 +270,10 @@ server.get("/verified", function(req, res, next){
                 console.log("oauthToken: %s",oauthAccessToken);
                 inMemoryStorage.saveData({"persistConversationData" : "true", "persistUserData" : "true", "userId" : userId}, {"userData" : oauthAccessToken} , function(err){
                     if(err) console.log("saveData Err:" + err);
+                    inMemoryStorage.getData({"persistConversationData" : "true", "persistUserData" : "true", "userId" : userId}, function(err, data){
+                        if(err) console.log(err);
+                        console.log("User State Data: ", JSON.stringify(data));
+                    });
                 });
            })
            res.send(200, "Successfully authenticated");
