@@ -44,7 +44,7 @@ function saveData(context, data, callback){
 function getData(context, callback){
     client.hget('userData', encrypt(JSON.stringify(context)), function(err, result){
         if(err) callback(err,{});
-        else if(!result) callback(JSON.parse({userData : undefined}));
+        else if(!result) callback({userData : undefined});
         else callback(JSON.parse(decrypt(result)));
     })
 }
