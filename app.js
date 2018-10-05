@@ -5,7 +5,7 @@ var jwtDecoder       = require("jwt-decode");
 var jsonwebtoken     = require("jsonwebtoken");
 var jwkToPem         = require("jwk-to-pem");
 var redis            = require("redis");
-var crypto           = require('crypto'), algorithm = 'sha256', password = process.env.CRYPTO_PASS;
+var crypto           = require('crypto'), algorithm = 'aes-128-cbc', password = process.env.CRYPTO_PASS;
 
 function encrypt(text){
   var cipher = crypto.createCipher(algorithm,password)
