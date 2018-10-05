@@ -12,6 +12,7 @@
     "jwt-decode": "^2.2.0",
     "promise": "^8.0.1",
     "random-number": "0.0.9",
+    "redis": "^2.8.0",
     "request": "^2.87.0",
     "restify": "^7.2.1"
   },

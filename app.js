@@ -4,22 +4,49 @@ var request          = require("request");
 var jwtDecoder       = require("jwt-decode");
 var jsonwebtoken     = require("jsonwebtoken");
 var jwkToPem         = require("jwk-to-pem");
+var redis            = require("redis");
+var crypto           = require('crypto'), algorithm = 'sha256', password = process.env.CRYPTO_PASS;
 
+function encrypt(text){
+  var cipher = crypto.createCipher(algorithm,password)
+  var crypted = cipher.update(text,'utf8','hex')
+  crypted += cipher.final('hex');
+  return crypted;
+}
+
+function decrypt(text){
+  var decipher = crypto.createDecipher(algorithm,password)
+  var dec = decipher.update(text,'hex','utf8')
+  dec += decipher.final('utf8');
+  return dec;
+}
 
 var server = restify.createServer();
 server.listen(process.env.port || process.env.PORT || 3980, function () {
     console.log('%s listening to %s', server.name, server.url); 
  });
 
-var connector = new botBuilder.ChatConnector({
-    appId: process.env.MICROSOFT_APP_ID,// || botConfig.microsoftAppId,
-    appPassword: process.env.MICROSOFT_APP_PASSWORD// || botConfig.microsoftAppPassword
+var redisHost = process.env.REDIS_URL;
+var client = redis.createClient({url: redisHost, password: process.env.REDIS_PASS});
+client.on('connect', function(){
+    console.log('Redis client connected');
+});
+client.on('error', function(err){
+    console.log('Error: %s in connecting Redis client', err);
 });
 
+function saveData(context, data, callback){
+    client.hset('userData', encrypt(JSON.stringify(context)), encrypt(JSON.stringify(data)), function(err, res){
+        callback(err);
+    });
+}
 
-var inMemoryStorage = new botBuilder.MemoryBotStorage();
-
-var bot = new botBuilder.UniversalBot(connector).set('storage', inMemoryStorage);
+function getData(context, callback){
+    client.hget('userData', encrypt(JSON.stringify(context)), function(err, result){
+        if(err) callback(err,{});
+        else callback(JSON.parse(decrypt(result)));
+    })
+}
 
 server.use(restify.plugins.bodyParser());
 server.post('/api/messages',function(req, res, next){
@@ -80,7 +107,7 @@ server.post('/api/messages',function(req, res, next){
                                 console.log(body);
                                 console.log(activityJson.conversation.id + activityJson.from.id);
                                 var accessKeyJson = JSON.parse(body);
-                                inMemoryStorage.getData({"persistConversationData" : "true", "persistUserData" : "true", "userId" : activityJson.from.id}, function(err, data){
+                                getData({"persistConversationData" : "true", "persistUserData" : "true", "userId" : activityJson.from.id}, function(err, data){
                                     if(err) console.log("Error at getData: " +  err);
                                     console.log("getData SDK: %s",data.userData);
                                     var botPostHeaders = {
@@ -139,7 +166,7 @@ server.post('/api/messages',function(req, res, next){
                                                                                     console.log(body);
                                                                 });
                                                                 var oauthAccessToken = new Buffer(JSON.stringify(refreshJson)).toString('base64');
-                                                                inMemoryStorage.saveData({"persistConversationData" : "true", "persistUserData" : "true", "userId" : activityJson.from.id}, {"userData" : oauthAccessToken} , function(err){
+                                                                saveData({"persistConversationData" : "true", "persistUserData" : "true", "userId" : activityJson.from.id}, {"userData" : oauthAccessToken} , function(err){
                                                                     if(err) console.log("saveData Err:" + err);
                                                                 });
                                                             }
@@ -268,9 +295,9 @@ server.get("/verified", function(req, res, next){
                 });
                 botPostHeaders.json = { "data" : oauthAccessToken, "eTag" : "test"}
                 console.log("oauthToken: %s",oauthAccessToken);
-                inMemoryStorage.saveData({"persistConversationData" : "true", "persistUserData" : "true", "userId" : userId}, {"userData" : oauthAccessToken} , function(err){
+                saveData({"persistConversationData" : "true", "persistUserData" : "true", "userId" : userId}, {"userData" : oauthAccessToken} , function(err){
                     if(err) console.log("saveData Err:" + err);
-                    inMemoryStorage.getData({"persistConversationData" : "true", "persistUserData" : "true", "userId" : userId}, function(err, data){
+                    getData({"persistConversationData" : "true", "persistUserData" : "true", "userId" : userId}, function(err, data){
                         if(err) console.log(err);
                         console.log("User State Data: ", JSON.stringify(data));
                     });
